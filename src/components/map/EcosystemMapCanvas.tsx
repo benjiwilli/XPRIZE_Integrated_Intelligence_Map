@@ -314,21 +314,21 @@ export default function EcosystemMapCanvas({
   return (
     <div className="relative w-full h-[580px] bg-[#f7fafb] rounded-xl border border-slate-200/80 overflow-hidden shadow-[0_24px_70px_rgba(15,23,42,0.18)] flex flex-col">
       {/* Top Controls Bar */}
-      <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-center select-none pointer-events-none">
-        {/* Left Side: Map Legend floating slightly */}
-        <div className="bg-white/90 backdrop-blur-md border border-slate-200 px-3 py-1.5 rounded-lg flex items-center space-x-2 text-xs pointer-events-auto shadow-lg">
+      <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-start gap-3 select-none pointer-events-none">
+        {/* Left Side: Active lens chip */}
+        <div className="bg-white/90 backdrop-blur-md border border-slate-200/80 px-3 py-1.5 rounded-lg flex items-center space-x-2 text-xs pointer-events-auto shadow-[0_6px_18px_rgba(15,23,42,0.12)] shrink-0">
           <div className="w-2 h-2 rounded-full bg-[#11b8a6] shadow-[0_0_8px_rgba(17,184,166,0.6)] animate-pulse"></div>
-          <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider">Map Lens:</span>
-          <span className="font-semibold text-slate-900 flex items-center space-x-1">
-            <span>{currentLensLabel}</span>
-          </span>
+          <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider">Lens</span>
+          <span className="font-semibold text-slate-900">{currentLensLabel}</span>
         </div>
 
         {/* Center: Frosted Glass Controller */}
-        <div className="bg-white/90 backdrop-blur-md border border-slate-200 py-1 px-1.5 rounded-full flex items-center space-x-1 shadow-xl pointer-events-auto">
-          <span className="px-3 py-1 bg-slate-100 text-[#9a6b18] font-mono text-xs font-semibold rounded-full tracking-wider">2026</span>
-          
-          <button 
+        <div className="bg-white/90 backdrop-blur-md border border-slate-200/80 py-1 px-1.5 rounded-full flex items-center gap-0.5 shadow-[0_8px_24px_rgba(15,23,42,0.14)] pointer-events-auto">
+          <span className="px-2.5 py-1 bg-slate-100 text-[#9a6b18] font-mono text-[11px] font-bold rounded-full tracking-wider">2026</span>
+
+          <span className="w-px h-4 bg-slate-200"></span>
+
+          <button
             onClick={() => setIsAnimating(!isAnimating)}
             className="p-1 px-2.5 rounded-full text-[11px] font-semibold tracking-wider uppercase transition-all flex items-center space-x-1 hover:bg-slate-100 text-slate-600 hover:text-slate-950 cursor-pointer"
             title="Toggle micro animations"
@@ -336,7 +336,7 @@ export default function EcosystemMapCanvas({
             {isAnimating ? (
               <>
                 <Play className="w-3.5 h-3.5 text-[#3b82f6]" />
-                <span>Active</span>
+                <span>Live</span>
               </>
             ) : (
               <>
@@ -357,7 +357,7 @@ export default function EcosystemMapCanvas({
             title="Toggle geographical coordinates grid lines"
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>Grid: {showGrid ? "ON" : "OFF"}</span>
+            <span>Grid</span>
           </button>
 
           <span className="w-px h-4 bg-slate-200"></span>
@@ -365,30 +365,20 @@ export default function EcosystemMapCanvas({
           <button
             onClick={() => setShowIntensityMap(!showIntensityMap)}
             className={`p-1 px-2.5 rounded-full text-[11px] font-semibold tracking-wider uppercase transition-all flex items-center space-x-1 cursor-pointer hover:bg-slate-100 ${
-              showIntensityMap ? "text-red-400 bg-red-400/10" : "text-slate-500 hover:text-slate-900"
+              showIntensityMap ? "text-red-500 bg-red-500/10" : "text-slate-500 hover:text-slate-900"
             }`}
             title="Toggle high-priority density heatmap layer"
           >
             <Flame className="w-3.5 h-3.5" />
-            <span>Intensity: {showIntensityMap ? "ON" : "OFF"}</span>
+            <span>Heat</span>
           </button>
-
-          <span className="w-px h-4 bg-slate-200"></span>
-
-          <span className="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-slate-500 flex items-center space-x-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#14B8A6]"></span>
-            <span>Lens Focus</span>
-          </span>
-
-          <span className="w-px h-4 bg-slate-200"></span>
-
-          <span className="px-3 py-1 text-xs font-semibold text-slate-800 font-mono uppercase">Canada View</span>
         </div>
 
         {/* Right Side: Calgary Hub Notice */}
-        <div className="bg-white/90 border border-emerald-200 px-3 py-1.5 rounded-lg text-[10px] font-mono text-[#0f9f8c] pointer-events-auto shadow-lg flex items-center space-x-1.5">
+        <div className="bg-white/90 border border-emerald-200/80 px-3 py-1.5 rounded-lg text-[10px] font-mono text-[#0f9f8c] pointer-events-auto shadow-[0_6px_18px_rgba(15,23,42,0.12)] flex items-center space-x-1.5 shrink-0">
           <Compass className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: "12s" }} />
-          <span>CAN-HUB STATUS: ACTIVE</span>
+          <span className="hidden sm:inline">CAN-HUB ACTIVE</span>
+          <span className="sm:hidden">HUB</span>
         </div>
       </div>
 
@@ -761,83 +751,83 @@ export default function EcosystemMapCanvas({
       <div className="absolute bottom-4 left-4 z-10 select-none text-[10px] pointer-events-auto flex flex-col items-start">
         <button 
           onClick={() => setIsLegendOpen(!isLegendOpen)}
-          className="bg-[#15151c]/90 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-lg flex items-center space-x-2 text-white/70 hover:text-white transition-colors cursor-pointer shadow-lg mb-2"
+          className="bg-white/90 backdrop-blur-md border border-slate-200/80 px-3 py-1.5 rounded-lg flex items-center space-x-2 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer shadow-[0_6px_18px_rgba(15,23,42,0.12)] mb-2"
         >
-          <Layers className="w-3.5 h-3.5" />
-          <span className="font-mono font-bold uppercase">Map Legend</span>
+          <Layers className="w-3.5 h-3.5 text-[#c5a059]" />
+          <span className="font-mono font-bold uppercase tracking-wider">Legend</span>
           {isLegendOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
         </button>
         
         {isLegendOpen && (
-          <div className="bg-[#15151c]/90 backdrop-blur-md border border-white/10 p-3 rounded-lg w-64 shadow-2xl animate-fade-in">
-            <h4 className="font-mono text-[9px] uppercase tracking-wider text-white/40 font-bold pb-2 border-b border-white/10">
+          <div className="bg-white/90 backdrop-blur-md border border-slate-200/80 p-3.5 rounded-xl w-64 shadow-[0_12px_32px_rgba(15,23,42,0.16)] animate-fade-in">
+            <h4 className="font-mono text-[9px] uppercase tracking-wider text-slate-400 font-bold pb-2 border-b border-slate-200">
               {activeLens === "follow_up_needed" ? "Follow-Up Action Lens" : 
                activeLens === "high_readiness" ? "High-Readiness Lens" :
                activeLens === "report_ready_evidence" ? "Evidence Lens" : 
                "Readiness Stage Colors"}
             </h4>
             
-            <div className="mt-3 space-y-2 text-[9px] text-white/70 font-mono">
+            <div className="mt-3 space-y-2 text-[10px] text-slate-600 font-mono">
               {activeLens === "follow_up_needed" ? (
                 <>
                   <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-[#F0645A]"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#F0645A] ring-1 ring-white shadow-sm"></span>
                     <span>Needs Follow-up</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-[#1e293b]"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-300 ring-1 ring-white shadow-sm"></span>
                     <span>No Action Needed</span>
                   </div>
                 </>
               ) : activeLens === "high_readiness" ? (
                 <>
                   <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-[#38BDF8]"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#38BDF8] ring-1 ring-white shadow-sm"></span>
                     <span>Prize Ready / Validated</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-[#1e293b]"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-300 ring-1 ring-white shadow-sm"></span>
                     <span>Other Stages</span>
                   </div>
                 </>
               ) : activeLens === "report_ready_evidence" ? (
                 <>
                   <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-[#22C55E]"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#22C55E] ring-1 ring-white shadow-sm"></span>
                     <span>Report-Ready (6+ Evidence)</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-[#1e293b]"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-300 ring-1 ring-white shadow-sm"></span>
                     <span>Building Evidence</span>
                   </div>
                 </>
               ) : (
                 <>
                   <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-[#3B82F6]"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6] ring-1 ring-white shadow-sm"></span>
                     <span>Prize Ready</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-[#14B8A6]"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#14B8A6] ring-1 ring-white shadow-sm"></span>
                     <span>Validated</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-[#22C55E]"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#22C55E] ring-1 ring-white shadow-sm"></span>
                     <span>Pilot</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-[#EAB308]"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#EAB308] ring-1 ring-white shadow-sm"></span>
                     <span>Prototype</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-[#F0645A]"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#F0645A] ring-1 ring-white shadow-sm"></span>
                     <span>Research</span>
                   </div>
                 </>
               )}
             </div>
 
-            <div className="mt-3 pt-2 border-t border-white/10 space-y-2 text-[9px] text-white/70 font-mono">
+            <div className="mt-3 pt-2.5 border-t border-slate-200 space-y-2 text-[10px] text-slate-600 font-mono">
               <div className="flex items-center space-x-2">
                 <svg className="w-3 h-3 overflow-visible px-0.5"><circle cx="4" cy="4" r="3" fill="none" stroke="#c5a059" strokeWidth="1" /></svg>
                 <span>Priority Pulse (Score &gt;= 90)</span>
@@ -849,11 +839,11 @@ export default function EcosystemMapCanvas({
             </div>
             
             {activeFilters.types.length > 0 && (
-              <div className="mt-3 pt-2 border-t border-white/10">
-                 <span className="text-[8px] text-white/40 block mb-1">VISIBLE TYPES</span>
+              <div className="mt-3 pt-2.5 border-t border-slate-200">
+                 <span className="text-[8px] text-slate-400 font-mono uppercase tracking-wider block mb-1.5">Visible Types</span>
                  <div className="flex flex-wrap gap-1">
                     {activeFilters.types.map(t => (
-                      <span key={t} className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 capitalize text-[#c5a059]">{t.replace("_", " ")}</span>
+                      <span key={t} className="px-1.5 py-0.5 rounded bg-[#c5a059]/10 border border-[#c5a059]/20 capitalize text-[#9a6b18] font-semibold">{t.replace("_", " ")}</span>
                     ))}
                  </div>
               </div>
@@ -863,16 +853,16 @@ export default function EcosystemMapCanvas({
       </div>
 
       {/* Zoom and Pan Navigation Control Overlay in bottom-right corner */}
-      <div className="absolute bottom-4 right-4 z-30 bg-[#15151c]/90 border border-white/10 backdrop-blur-md p-2 rounded-lg flex flex-col items-center shadow-2xl space-y-1.5 select-none pointer-events-auto">
-        <span className="text-[8px] font-mono uppercase tracking-wider text-white/40 font-bold block pb-1 border-b border-white/5 w-full text-center">
-          Nav Control
+      <div className="absolute bottom-4 right-4 z-30 bg-white/90 border border-slate-200/80 backdrop-blur-md p-2 rounded-xl flex flex-col items-center shadow-[0_12px_32px_rgba(15,23,42,0.16)] space-y-1.5 select-none pointer-events-auto">
+        <span className="text-[8px] font-mono uppercase tracking-wider text-slate-400 font-bold block pb-1 border-b border-slate-200 w-full text-center">
+          Navigate
         </span>
         
         {/* Directional Pad Container */}
-        <div className="relative w-24 h-24 bg-white/5 rounded-full border border-white/5 flex items-center justify-center p-1 shadow-inner">
+        <div className="relative w-24 h-24 bg-slate-100/70 rounded-full border border-slate-200/70 flex items-center justify-center p-1 shadow-inner">
           <button 
             onClick={() => handlePan("up")}
-            className="absolute top-1 p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-all cursor-pointer"
+            className="absolute top-1 p-1 rounded-md hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-all cursor-pointer"
             title="Pan Up"
             id="map-pan-up"
           >
@@ -880,7 +870,7 @@ export default function EcosystemMapCanvas({
           </button>
           <button 
             onClick={() => handlePan("left")}
-            className="absolute left-1 p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-all cursor-pointer"
+            className="absolute left-1 p-1 rounded-md hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-all cursor-pointer"
             title="Pan Left"
             id="map-pan-left"
           >
@@ -888,7 +878,7 @@ export default function EcosystemMapCanvas({
           </button>
           <button 
             onClick={() => handleResetZoomAndPan()}
-            className="p-1 rounded-full bg-white/10 text-[#c5a059] hover:bg-[#c5a059]/25 hover:text-[#c5a059] transition-all cursor-pointer flex items-center justify-center aspect-square text-[9px] font-mono font-bold uppercase w-10 h-10 select-none"
+            className="p-1 rounded-full bg-[#c5a059]/15 text-[#9a6b18] hover:bg-[#c5a059]/30 transition-all cursor-pointer flex items-center justify-center aspect-square text-[9px] font-mono font-bold uppercase w-10 h-10 select-none border border-[#c5a059]/20"
             title="Recenter Map View"
             id="map-recenter"
           >
@@ -896,7 +886,7 @@ export default function EcosystemMapCanvas({
           </button>
           <button 
             onClick={() => handlePan("right")}
-            className="absolute right-1 p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-all cursor-pointer"
+            className="absolute right-1 p-1 rounded-md hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-all cursor-pointer"
             title="Pan Right"
             id="map-pan-right"
           >
@@ -904,7 +894,7 @@ export default function EcosystemMapCanvas({
           </button>
           <button 
             onClick={() => handlePan("down")}
-            className="absolute bottom-1 p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-all cursor-pointer"
+            className="absolute bottom-1 p-1 rounded-md hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-all cursor-pointer"
             title="Pan Down"
             id="map-pan-down"
           >
@@ -913,26 +903,26 @@ export default function EcosystemMapCanvas({
         </div>
 
         {/* Separator line */}
-        <div className="w-full h-px bg-white/5"></div>
+        <div className="w-full h-px bg-slate-200"></div>
 
         {/* Zoom adjustment panel */}
         <div className="flex items-center justify-between w-full space-x-1.5 px-1">
           <button 
             onClick={handleZoomOut}
-            className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all cursor-pointer flex items-center justify-center border border-white/5"
+            className="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-all cursor-pointer flex items-center justify-center border border-slate-200/70"
             title="Zoom Out"
             id="map-zoom-out"
           >
             <Minus className="w-3 h-3" />
           </button>
           
-          <span className="font-mono text-[9px] text-white/65 min-w-[36px] text-center select-none">
+          <span className="font-mono text-[10px] font-semibold text-slate-700 min-w-[36px] text-center select-none">
             {Math.round(zoom * 100)}%
           </span>
 
           <button 
             onClick={handleZoomIn}
-            className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all cursor-pointer flex items-center justify-center border border-white/5"
+            className="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-all cursor-pointer flex items-center justify-center border border-slate-200/70"
             title="Zoom In"
             id="map-zoom-in"
           >

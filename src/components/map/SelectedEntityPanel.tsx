@@ -19,6 +19,31 @@ import {
   Activity
 } from "lucide-react";
 
+// Render lightweight inline markdown (**bold**) and strip stray markdown tokens
+// so AI-generated copy reads cleanly inside the dark intel panel.
+function renderFormattedText(text: string): React.ReactNode {
+  if (!text) return null;
+  const lines = text.split("\n");
+  return lines.map((line, lineIdx) => {
+    const cleaned = line.replace(/^\s*[-*]\s+/, "• ");
+    const segments = cleaned.split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
+    return (
+      <span key={lineIdx} className="block">
+        {segments.map((seg, segIdx) => {
+          if (seg.startsWith("**") && seg.endsWith("**")) {
+            return (
+              <strong key={segIdx} className="font-semibold text-white">
+                {seg.slice(2, -2)}
+              </strong>
+            );
+          }
+          return <React.Fragment key={segIdx}>{seg}</React.Fragment>;
+        })}
+      </span>
+    );
+  });
+}
+
 interface SelectedEntityPanelProps {
   entity: EcosystemEntity | null;
   allEntities?: EcosystemEntity[];
@@ -300,9 +325,9 @@ export default function SelectedEntityPanel({
             <span className="text-[10px] text-white/40 font-mono">Synthesizing insights...</span>
           </div>
         ) : (
-          <p className="text-[10.5px] text-white/80 leading-relaxed font-sans whitespace-pre-line">
-            {whyThisMattersText}
-          </p>
+          <div className="text-[10.5px] text-white/80 leading-relaxed font-sans space-y-1">
+            {renderFormattedText(whyThisMattersText)}
+          </div>
         )}
       </div>
 
@@ -378,9 +403,9 @@ export default function SelectedEntityPanel({
             </div>
           </div>
           
-          <p className="text-[10.5px] text-white/80 whitespace-pre-line leading-relaxed font-sans">
-            {activeDraft.content}
-          </p>
+          <div className="text-[10.5px] text-white/80 leading-relaxed font-sans space-y-1">
+            {renderFormattedText(activeDraft.content)}
+          </div>
 
           <div className="pt-2 border-t border-white/5 flex items-center justify-between">
             <span className="text-[9px] font-mono uppercase text-white/40 italic">

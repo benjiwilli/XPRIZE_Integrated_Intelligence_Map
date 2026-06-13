@@ -599,13 +599,13 @@ export default function EcosystemMapView({
             <button
               key={tab}
               onClick={() => setRightPanelTab(tab)}
-              className={`flex-grow text-center pb-2 transition-colors cursor-pointer relative ${
-                rightPanelTab === tab ? "text-white" : "text-white/40 hover:text-white/70"
+              className={`flex-grow text-center pb-2.5 transition-colors cursor-pointer relative ${
+                rightPanelTab === tab ? "text-[#c5a059]" : "text-white/40 hover:text-white/70"
               }`}
             >
               <span>{tab}</span>
               {rightPanelTab === tab && (
-                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#c5a059]"></div>
+                <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-[#c5a059] shadow-[0_0_8px_rgba(197,160,89,0.5)]"></div>
               )}
             </button>
           ))}
@@ -695,7 +695,7 @@ export default function EcosystemMapView({
                     <span className="text-[#F97316] font-bold uppercase">Wildfire Response</span>
                     <span className="font-semibold text-white">{stats.totalCount > 0 ? Math.round((stats.tracksCounts.Wildfire / stats.totalCount) * 100) : 0}%</span>
                   </div>
-                  <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                     <div className="h-full bg-[#F97316] rounded-full" style={{ width: `${stats.totalCount > 0 ? Math.round((stats.tracksCounts.Wildfire / stats.totalCount) * 100) : 0}%` }}></div>
                   </div>
                 </div>
@@ -706,7 +706,7 @@ export default function EcosystemMapView({
                     <span className="text-[#3b82f6] font-bold uppercase">Water Scarcity</span>
                     <span className="font-semibold text-white">{stats.totalCount > 0 ? Math.round((stats.tracksCounts.Water / stats.totalCount) * 100) : 0}%</span>
                   </div>
-                  <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                     <div className="h-full bg-[#3b82f6] rounded-full" style={{ width: `${stats.totalCount > 0 ? Math.round((stats.tracksCounts.Water / stats.totalCount) * 100) : 0}%` }}></div>
                   </div>
                 </div>
@@ -717,7 +717,7 @@ export default function EcosystemMapView({
                     <span className="text-emerald-500 font-bold uppercase">Carbon Removal</span>
                     <span className="font-semibold text-white">{stats.totalCount > 0 ? Math.round((stats.tracksCounts.Carbon / stats.totalCount) * 100) : 0}%</span>
                   </div>
-                  <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                     <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${stats.totalCount > 0 ? Math.round((stats.tracksCounts.Carbon / stats.totalCount) * 100) : 0}%` }}></div>
                   </div>
                 </div>
@@ -728,7 +728,7 @@ export default function EcosystemMapView({
                     <span className="text-violet-400 font-bold uppercase">Healthspan Integration</span>
                     <span className="font-semibold text-white">{stats.totalCount > 0 ? Math.round((stats.tracksCounts.Health / stats.totalCount) * 100) : 0}%</span>
                   </div>
-                  <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                     <div className="h-full bg-violet-400 rounded-full" style={{ width: `${stats.totalCount > 0 ? Math.round((stats.tracksCounts.Health / stats.totalCount) * 100) : 0}%` }}></div>
                   </div>
                 </div>
@@ -739,7 +739,7 @@ export default function EcosystemMapView({
                     <span className="text-purple-500 font-bold uppercase">Quantum Apps</span>
                     <span className="font-semibold text-white">{stats.totalCount > 0 ? Math.round((stats.tracksCounts.Quantum / stats.totalCount) * 100) : 0}%</span>
                   </div>
-                  <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                     <div className="h-full bg-purple-500 rounded-full" style={{ width: `${stats.totalCount > 0 ? Math.round((stats.tracksCounts.Quantum / stats.totalCount) * 100) : 0}%` }}></div>
                   </div>
                 </div>
@@ -750,7 +750,7 @@ export default function EcosystemMapView({
                     <span className="text-[#06b6d4] font-bold uppercase">AI + Deep Tech</span>
                     <span className="font-semibold text-white">{stats.totalCount > 0 ? Math.round((stats.tracksCounts.DeepTech / stats.totalCount) * 100) : 0}%</span>
                   </div>
-                  <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                     <div className="h-full bg-[#06b6d4] rounded-full" style={{ width: `${stats.totalCount > 0 ? Math.round((stats.tracksCounts.DeepTech / stats.totalCount) * 100) : 0}%` }}></div>
                   </div>
                 </div>

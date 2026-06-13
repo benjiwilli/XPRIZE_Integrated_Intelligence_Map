@@ -121,11 +121,11 @@ export default function MapFilters({
     <div className="w-[280px] bg-[#0e0e12] border-r border-white/10 p-4 flex flex-col h-full overflow-y-auto shrink-0 select-none">
       {/* Sidebar Header */}
       <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
-        <div className="flex items-center space-x-1.5">
+        <div className="flex items-center space-x-2">
           <Filter className="w-3.5 h-3.5 text-[#c5a059]" />
-          <h2 className="text-xs font-bold font-mono tracking-widest text-white uppercase font-sans">Filters</h2>
+          <h2 className="text-xs font-bold font-mono tracking-[0.18em] text-white uppercase">Filters</h2>
           {activeFiltersCount > 0 && (
-            <span className="bg-[#3b82f6]/20 text-[#3b82f6] text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full border border-[#3b82f6]/30">
+            <span className="bg-[#c5a059]/15 text-[#c5a059] text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full border border-[#c5a059]/30 leading-none">
               {activeFiltersCount}
             </span>
           )}
@@ -133,7 +133,7 @@ export default function MapFilters({
         {activeFiltersCount > 0 && (
           <button 
             onClick={onResetFilters}
-            className="text-[10px] text-[#c5a059] hover:text-white flex items-center space-x-1 font-semibold uppercase text-[9px] cursor-pointer hover:underline transition-all"
+            className="text-[9px] text-white/45 hover:text-[#c5a059] flex items-center space-x-1 font-semibold uppercase tracking-wider cursor-pointer transition-colors"
           >
             <RotateCcw className="w-3 h-3" />
             <span>Reset All</span>
@@ -157,7 +157,7 @@ export default function MapFilters({
                   onClick={() => toggleSelection("challengeAreas", area)}
                   className={`w-full flex items-center justify-between text-left text-xs py-1.5 px-2 rounded transition-all cursor-pointer ${
                     isSelected 
-                      ? "bg-[#15151c] border border-[#3b82f6]/50 text-white shadow-inner" 
+                      ? "bg-[#15151c] border border-[#c5a059]/45 text-white shadow-inner" 
                       : "text-white/70 hover:bg-[#15151c] hover:text-white border border-transparent"
                   }`}
                 >
@@ -172,7 +172,7 @@ export default function MapFilters({
                     }`}></span>
                     <span className="truncate">{area}</span>
                   </div>
-                  <span className="text-[10px] font-mono text-white/40 bg-black/40 px-1.5 rounded">
+                  <span className="text-[10px] font-mono text-white/45 bg-white/5 px-1.5 py-0.5 rounded leading-none">
                     {count}
                   </span>
                 </button>
@@ -201,7 +201,7 @@ export default function MapFilters({
                   }`}
                 >
                   <span className="truncate">{opt.label}</span>
-                  <span className="text-[10px] font-mono text-white/45 bg-black/40 px-1.5 rounded">{count}</span>
+                  <span className="text-[10px] font-mono text-white/45 bg-white/5 px-1.5 py-0.5 rounded leading-none">{count}</span>
                 </button>
               );
             })}
@@ -223,7 +223,7 @@ export default function MapFilters({
                   onClick={() => toggleSelection("statuses", opt.id)}
                   className={`w-full flex items-center justify-between text-left text-xs py-1.5 px-2 rounded transition-all cursor-pointer ${
                     isSelected 
-                      ? "bg-[#15151c] border border-[#3b82f6]/40 text-white" 
+                      ? "bg-[#15151c] border border-[#c5a059]/45 text-white" 
                       : "text-white/70 hover:bg-[#15151c] hover:text-white border border-transparent"
                   }`}
                 >
@@ -236,7 +236,7 @@ export default function MapFilters({
                     }`}></span>
                     <span className="truncate">{opt.label}</span>
                   </div>
-                  <span className="text-[10px] font-mono text-white/45 bg-black/40 px-1.5 rounded">{count}</span>
+                  <span className="text-[10px] font-mono text-white/45 bg-white/5 px-1.5 py-0.5 rounded leading-none">{count}</span>
                 </button>
               );
             })}
@@ -263,7 +263,7 @@ export default function MapFilters({
                   }`}
                 >
                   <span className="capitalize truncate">{opt.label}</span>
-                  <span className="text-[10px] font-mono text-white/45 bg-black/40 px-1.5 rounded">{count}</span>
+                  <span className="text-[10px] font-mono text-white/45 bg-white/5 px-1.5 py-0.5 rounded leading-none">{count}</span>
                 </button>
               );
             })}
@@ -285,12 +285,12 @@ export default function MapFilters({
                   onClick={() => toggleSelection("owners", owner)}
                   className={`w-full flex items-center justify-between text-left text-xs py-1.5 px-2 rounded transition-all cursor-pointer ${
                     isSelected 
-                      ? "bg-[#15151c] border border-zinc-700/50 text-white" 
+                      ? "bg-[#15151c] border border-[#c5a059]/45 text-white" 
                       : "text-white/70 hover:bg-[#15151c] hover:text-white border border-transparent"
                   }`}
                 >
                   <span className="truncate">{owner.replace(" Lead", "")}</span>
-                  <span className="text-[10px] font-mono text-white/45 bg-black/40 px-1.5 rounded">{count}</span>
+                  <span className="text-[10px] font-mono text-white/45 bg-white/5 px-1.5 py-0.5 rounded leading-none">{count}</span>
                 </button>
               );
             })}
@@ -312,12 +312,12 @@ export default function MapFilters({
                   onClick={() => toggleSelection("evidence", opt.id)}
                   className={`w-full flex items-center justify-between text-left text-xs py-1.5 px-2 rounded transition-all cursor-pointer ${
                     isSelected 
-                      ? "bg-[#15151c] border border-emerald-500/30 text-white" 
+                      ? "bg-[#15151c] border border-[#c5a059]/45 text-white" 
                       : "text-white/70 hover:bg-[#15151c] hover:text-white border border-transparent"
                   }`}
                 >
                   <span className="capitalize truncate">{opt.label}</span>
-                  <span className="text-[10px] font-mono text-white/45 bg-black/40 px-1.5 rounded">{count}</span>
+                  <span className="text-[10px] font-mono text-white/45 bg-white/5 px-1.5 py-0.5 rounded leading-none">{count}</span>
                 </button>
               );
             })}
