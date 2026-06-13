@@ -314,21 +314,21 @@ export default function EcosystemMapCanvas({
   return (
     <div className="relative w-full h-[580px] bg-[#f7fafb] rounded-xl border border-slate-200/80 overflow-hidden shadow-[0_24px_70px_rgba(15,23,42,0.18)] flex flex-col">
       {/* Top Controls Bar */}
-      <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-center select-none pointer-events-none">
-        {/* Left Side: Map Legend floating slightly */}
-        <div className="bg-white/90 backdrop-blur-md border border-slate-200 px-3 py-1.5 rounded-lg flex items-center space-x-2 text-xs pointer-events-auto shadow-lg">
+      <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-start gap-3 select-none pointer-events-none">
+        {/* Left Side: Active lens chip */}
+        <div className="bg-white/90 backdrop-blur-md border border-slate-200/80 px-3 py-1.5 rounded-lg flex items-center space-x-2 text-xs pointer-events-auto shadow-[0_6px_18px_rgba(15,23,42,0.12)] shrink-0">
           <div className="w-2 h-2 rounded-full bg-[#11b8a6] shadow-[0_0_8px_rgba(17,184,166,0.6)] animate-pulse"></div>
-          <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider">Map Lens:</span>
-          <span className="font-semibold text-slate-900 flex items-center space-x-1">
-            <span>{currentLensLabel}</span>
-          </span>
+          <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider">Lens</span>
+          <span className="font-semibold text-slate-900">{currentLensLabel}</span>
         </div>
 
         {/* Center: Frosted Glass Controller */}
-        <div className="bg-white/90 backdrop-blur-md border border-slate-200 py-1 px-1.5 rounded-full flex items-center space-x-1 shadow-xl pointer-events-auto">
-          <span className="px-3 py-1 bg-slate-100 text-[#9a6b18] font-mono text-xs font-semibold rounded-full tracking-wider">2026</span>
-          
-          <button 
+        <div className="bg-white/90 backdrop-blur-md border border-slate-200/80 py-1 px-1.5 rounded-full flex items-center gap-0.5 shadow-[0_8px_24px_rgba(15,23,42,0.14)] pointer-events-auto">
+          <span className="px-2.5 py-1 bg-slate-100 text-[#9a6b18] font-mono text-[11px] font-bold rounded-full tracking-wider">2026</span>
+
+          <span className="w-px h-4 bg-slate-200"></span>
+
+          <button
             onClick={() => setIsAnimating(!isAnimating)}
             className="p-1 px-2.5 rounded-full text-[11px] font-semibold tracking-wider uppercase transition-all flex items-center space-x-1 hover:bg-slate-100 text-slate-600 hover:text-slate-950 cursor-pointer"
             title="Toggle micro animations"
@@ -336,7 +336,7 @@ export default function EcosystemMapCanvas({
             {isAnimating ? (
               <>
                 <Play className="w-3.5 h-3.5 text-[#3b82f6]" />
-                <span>Active</span>
+                <span>Live</span>
               </>
             ) : (
               <>
@@ -357,7 +357,7 @@ export default function EcosystemMapCanvas({
             title="Toggle geographical coordinates grid lines"
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>Grid: {showGrid ? "ON" : "OFF"}</span>
+            <span>Grid</span>
           </button>
 
           <span className="w-px h-4 bg-slate-200"></span>
@@ -365,30 +365,20 @@ export default function EcosystemMapCanvas({
           <button
             onClick={() => setShowIntensityMap(!showIntensityMap)}
             className={`p-1 px-2.5 rounded-full text-[11px] font-semibold tracking-wider uppercase transition-all flex items-center space-x-1 cursor-pointer hover:bg-slate-100 ${
-              showIntensityMap ? "text-red-400 bg-red-400/10" : "text-slate-500 hover:text-slate-900"
+              showIntensityMap ? "text-red-500 bg-red-500/10" : "text-slate-500 hover:text-slate-900"
             }`}
             title="Toggle high-priority density heatmap layer"
           >
             <Flame className="w-3.5 h-3.5" />
-            <span>Intensity: {showIntensityMap ? "ON" : "OFF"}</span>
+            <span>Heat</span>
           </button>
-
-          <span className="w-px h-4 bg-slate-200"></span>
-
-          <span className="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-slate-500 flex items-center space-x-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#14B8A6]"></span>
-            <span>Lens Focus</span>
-          </span>
-
-          <span className="w-px h-4 bg-slate-200"></span>
-
-          <span className="px-3 py-1 text-xs font-semibold text-slate-800 font-mono uppercase">Canada View</span>
         </div>
 
         {/* Right Side: Calgary Hub Notice */}
-        <div className="bg-white/90 border border-emerald-200 px-3 py-1.5 rounded-lg text-[10px] font-mono text-[#0f9f8c] pointer-events-auto shadow-lg flex items-center space-x-1.5">
+        <div className="bg-white/90 border border-emerald-200/80 px-3 py-1.5 rounded-lg text-[10px] font-mono text-[#0f9f8c] pointer-events-auto shadow-[0_6px_18px_rgba(15,23,42,0.12)] flex items-center space-x-1.5 shrink-0">
           <Compass className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: "12s" }} />
-          <span>CAN-HUB STATUS: ACTIVE</span>
+          <span className="hidden sm:inline">CAN-HUB ACTIVE</span>
+          <span className="sm:hidden">HUB</span>
         </div>
       </div>
 
