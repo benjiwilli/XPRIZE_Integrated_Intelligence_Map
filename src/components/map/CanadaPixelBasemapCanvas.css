@@ -1,3 +1,28 @@
+/*
+ * The map viewport acts as a sizing container so the inner stage can lock to the
+ * Canada basemap's native aspect ratio (1586 x 992) regardless of how the card
+ * is sized in the full prototype.
+ */
+.map-viewport {
+  container-type: size;
+}
+
+/*
+ * Aspect-ratio-locked, centered stage. Both the pixel basemap and the SVG entity
+ * overlay fill this box, so the Canada silhouette is never stretched and the
+ * percent-based node coordinates stay perfectly aligned with the basemap.
+ * Sizing uses container-query units to "contain" the 1586:992 box inside the
+ * viewport (letterboxed) without any JS measurement.
+ */
+.map-stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(100cqw, 100cqh * 1586 / 992);
+  height: min(100cqh, 100cqw * 992 / 1586);
+}
+
 .canada-pixel-basemap-shell {
   position: absolute;
   inset: 0;

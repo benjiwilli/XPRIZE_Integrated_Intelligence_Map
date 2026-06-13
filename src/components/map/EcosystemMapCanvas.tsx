@@ -426,6 +426,8 @@ export default function EcosystemMapCanvas({
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
         >
+          {/* Aspect-locked stage keeps the basemap + node overlay proportional (no stretch). */}
+          <div className="map-stage">
           {/* Generated education-style Canada pixel basemap. */}
           <CanadaPixelBasemapCanvas animate={isAnimating} drawMarkers={false} className="z-0" />
 
@@ -631,6 +633,7 @@ export default function EcosystemMapCanvas({
             onHoverRegion={(region) => setHoveredRegion(region)}
             onSetRegionTooltipPos={(pos) => setRegionTooltipPos(pos)}
           />
+          </div>
         </div>
       </div>
 
