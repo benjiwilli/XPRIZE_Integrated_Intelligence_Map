@@ -118,11 +118,13 @@ export default function MapFilters({
     activeFilters.evidence.length;
 
   return (
-    <div className="w-[280px] bg-[#0e0e12] border-r border-white/10 p-4 flex flex-col h-full overflow-y-auto shrink-0 select-none">
+    <div className="w-[280px] bg-gradient-to-b from-[#0e0e12] to-[#0a0a0c] border-r border-white/10 p-4 flex flex-col h-full overflow-y-auto shrink-0 select-none">
       {/* Sidebar Header */}
       <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
-        <div className="flex items-center space-x-2">
-          <Filter className="w-3.5 h-3.5 text-[#c5a059]" />
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-[#c5a059]/10 ring-1 ring-inset ring-[#c5a059]/25 text-[#c5a059]">
+            <Filter className="w-3.5 h-3.5" />
+          </div>
           <h2 className="text-xs font-bold font-mono tracking-[0.18em] text-white uppercase">Filters</h2>
           {activeFiltersCount > 0 && (
             <span className="bg-[#c5a059]/15 text-[#c5a059] text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full border border-[#c5a059]/30 leading-none">

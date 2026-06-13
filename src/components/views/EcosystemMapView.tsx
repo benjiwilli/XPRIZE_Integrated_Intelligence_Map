@@ -26,7 +26,15 @@ import {
   Star,
   Activity,
   Heart,
-  X
+  X,
+  AlertTriangle,
+  Target,
+  ShieldCheck,
+  FileSearch,
+  MapPin,
+  ArrowRight,
+  Lightbulb,
+  type LucideIcon
 } from "lucide-react";
 
 interface EcosystemMapViewProps {
@@ -183,6 +191,182 @@ export default function EcosystemMapView({
     };
   }, [filteredEntities]);
 
+  // Derived, real values for the bottom summary strip (no hardcoded counts)
+  const bottomSummary = useMemo(() => {
+    const trackLabels: Record<string, string> = {
+      Wildfire: "Wildfire Response",
+      Water: "Water Innovation",
+      Carbon: "Carbon Removal",
+      Health: "Healthspan",
+      Quantum: "Quantum Apps",
+      DeepTech: "AI + Deep Tech"
+    };
+    const topTrack = (Object.entries(stats.tracksCounts) as [string, number][]).reduce<{ key: string; count: number }>(
+      (best, [key, count]) => (count > best.count ? { key, count } : best),
+      { key: "Water", count: -1 }
+    );
+
+    // Most active province across the filtered set
+    const provinceCounts: Record<string, number> = {};
+    filteredEntities.forEach(e => {
+      if (e.province) provinceCounts[e.province] = (provinceCounts[e.province] || 0) + 1;
+    });
+    const topProvince = (Object.entries(provinceCounts) as [string, number][]).reduce<{ name: string; count: number }>(
+      (best, [name, count]) => (count > best.count ? { name, count } : best),
+      { name: "—", count: 0 }
+    );
+
+    return {
+      topClusterLabel: trackLabels[topTrack.key] || "Water Innovation",
+      topClusterCount: Math.max(topTrack.count, 0),
+      topProvince: topProvince.name,
+      topProvinceCount: topProvince.count,
+      criticalActions: stats.followUps,
+      prizeReady: stats.highReady,
+      reportReady: stats.reportReady
+    };
+  }, [stats, filteredEntities]);
+
+  // True priority leaders for the ranking tab — sort first, THEN slice, and respect active filters.
+  const rankedLeaders = useMemo(() => {
+    return [...filteredEntities]
+      .sort((a, b) => b.priorityScore - a.priorityScore)
+      .slice(0, 8);
+  }, [filteredEntities]);
+
+  // Data-driven strategic insights. Each insight is computed from the live ecosystem
+  // and wired to an existing tool (lens, filter, or entity profile) so it is actionable.
+  const insights = useMemo(() => {
+    const list: {
+      id: string;
+      severity: "critical" | "opportunity" | "info";
+      Icon: LucideIcon;
+      title: string;
+      detail: string;
+      metric?: string;
+      actionLabel: string;
+      onAction: () => void;
+    }[] = [];
+
+    if (entities.length === 0) return list;
+
+    // 1. Follow-ups requiring a response
+    const followUps = entities.filter(e => e.engagementStatus === "follow_up_needed");
+    if (followUps.length > 0) {
+      const ownerCounts: Record<string, number> = {};
+      followUps.forEach(e => { ownerCounts[e.relationshipOwner] = (ownerCounts[e.relationshipOwner] || 0) + 1; });
+      const topOwner = Object.entries(ownerCounts).sort((a, b) => b[1] - a[1])[0];
+      list.push({
+        id: "follow-ups",
+        severity: "critical",
+        Icon: AlertTriangle,
+        title: "Follow-ups awaiting response",
+        detail: `${followUps.length} relationship${followUps.length > 1 ? "s are" : " is"} flagged for follow-up${topOwner ? `, with ${topOwner[0]} carrying ${topOwner[1]} of them` : ""}.`,
+        metric: `${followUps.length}`,
+        actionLabel: "Open follow-up lens",
+        onAction: () => setActiveLens("follow_up_needed")
+      });
+    }
+
+    // 2. High-value relationship going cold
+    const coldHighValue = [...entities]
+      .filter(e => ["new", "contacted", "dormant"].includes(e.engagementStatus))
+      .sort((a, b) => b.priorityScore - a.priorityScore)[0];
+    if (coldHighValue && coldHighValue.priorityScore >= 70) {
+      list.push({
+        id: "cold-high-value",
+        severity: "critical",
+        Icon: Target,
+        title: "High-value relationship going cold",
+        detail: `${coldHighValue.name} scores ${coldHighValue.priorityScore} but is still ${coldHighValue.engagementStatus.replace("_", " ")} — prioritize re-engagement.`,
+        actionLabel: "Open profile",
+        onAction: () => { onSelectEntity(coldHighValue); setRightPanelTab("metrics"); }
+      });
+    }
+
+    // 3. Prize-readiness momentum
+    const prizeReady = entities.filter(e => e.readinessStage === "prize_ready" || e.readinessStage === "validated");
+    if (prizeReady.length > 0) {
+      list.push({
+        id: "prize-ready",
+        severity: "opportunity",
+        Icon: ShieldCheck,
+        title: "Teams ready for the briefing cycle",
+        detail: `${prizeReady.length} team${prizeReady.length > 1 ? "s are" : " is"} validated or prize-ready and can be moved into the next briefing round.`,
+        metric: `${prizeReady.length}`,
+        actionLabel: "Open high-readiness lens",
+        onAction: () => setActiveLens("high_readiness")
+      });
+    }
+
+    // 4. Best ROI for an evidence push (high priority, weak evidence)
+    const evidenceGap = [...entities]
+      .filter(e => e.evidenceCount === 0 || e.approvedEvidenceCount / Math.max(e.evidenceCount, 1) < 0.5)
+      .sort((a, b) => b.priorityScore - a.priorityScore)[0];
+    if (evidenceGap) {
+      list.push({
+        id: "evidence-gap",
+        severity: "opportunity",
+        Icon: FileSearch,
+        title: "Strongest evidence-collection target",
+        detail: `${evidenceGap.name} (${evidenceGap.priorityScore}) has only ${evidenceGap.approvedEvidenceCount}/${evidenceGap.evidenceCount} evidence approved — the highest-priority gap to close.`,
+        actionLabel: "Open profile",
+        onAction: () => { onSelectEntity(evidenceGap); setRightPanelTab("metrics"); }
+      });
+    }
+
+    // 5. Thinnest challenge track — a national coverage gap
+    const trackDefs: { area: ChallengeArea; label: string }[] = [
+      { area: "Wildfire", label: "Wildfire Response" },
+      { area: "Water Scarcity", label: "Water Innovation" },
+      { area: "Carbon Removal", label: "Carbon Removal" },
+      { area: "Healthspan", label: "Healthspan" },
+      { area: "Quantum", label: "Quantum Apps" },
+      { area: "AI + Deep Tech", label: "AI + Deep Tech" }
+    ];
+    const trackCounts = trackDefs.map(t => ({
+      ...t,
+      count: entities.filter(e => e.challengeAreas.includes(t.area)).length
+    }));
+    const thinnest = trackCounts.reduce((min, t) => (t.count < min.count ? t : min), trackCounts[0]);
+    if (thinnest) {
+      list.push({
+        id: "challenge-gap",
+        severity: "info",
+        Icon: Layers,
+        title: "Thinnest challenge track",
+        detail: `${thinnest.label} has only ${thinnest.count} active node${thinnest.count === 1 ? "" : "s"} — the widest national coverage gap to fill.`,
+        metric: `${thinnest.count}`,
+        actionLabel: `Filter to ${thinnest.label}`,
+        onAction: () => setFilters((prev: any) => ({ ...prev, challengeAreas: [thinnest.area] }))
+      });
+    }
+
+    // 6. Densest regional cluster
+    const provinceCounts: Record<string, number> = {};
+    entities.forEach(e => { if (e.province) provinceCounts[e.province] = (provinceCounts[e.province] || 0) + 1; });
+    const topProvince = Object.entries(provinceCounts).sort((a, b) => b[1] - a[1])[0];
+    if (topProvince) {
+      const pct = Math.round((topProvince[1] / entities.length) * 100);
+      const topInProvince = [...entities]
+        .filter(e => e.province === topProvince[0])
+        .sort((a, b) => b.priorityScore - a.priorityScore)[0];
+      list.push({
+        id: "regional-cluster",
+        severity: "info",
+        Icon: MapPin,
+        title: "Densest regional cluster",
+        detail: `${topProvince[0]} anchors ${topProvince[1]} nodes (${pct}% of the ecosystem), led by ${topInProvince?.name}.`,
+        metric: `${pct}%`,
+        actionLabel: "Open lead profile",
+        onAction: () => { if (topInProvince) { onSelectEntity(topInProvince); setRightPanelTab("metrics"); } }
+      });
+    }
+
+    const order = { critical: 0, opportunity: 1, info: 2 };
+    return list.sort((a, b) => order[a.severity] - order[b.severity]);
+  }, [entities, setActiveLens, onSelectEntity, setFilters, setRightPanelTab]);
+
   // Filter entities according to search within the tab
   const searchedEntitiesTab = useMemo(() => {
     if (!searchQuery) return entities;
@@ -216,10 +400,12 @@ export default function EcosystemMapView({
       <div className="flex-grow flex flex-col p-4 space-y-4 overflow-y-auto">
         
         {/* Horizontal Opportunity Lens bar near map Controls */}
-        <div className="map-controls-panel bg-[#15151c]/60 border border-white/10 p-1.5 rounded-lg flex flex-wrap items-center gap-1">
-          <span className="text-[9px] font-mono uppercase tracking-wider text-white/40 font-bold px-2 py-1 shrink-0">
-            Ecosystem Lens:
+        <div className="map-controls-panel bg-gradient-to-b from-[#16161e] to-[#101015] border border-white/[0.08] p-2 rounded-xl flex flex-wrap items-center gap-1 shadow-[0_4px_24px_-12px_rgba(0,0,0,0.8)]">
+          <span className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-[0.16em] text-white/45 font-bold px-2 py-1 shrink-0">
+            <Compass className="w-3.5 h-3.5 text-[#c5a059]" />
+            Ecosystem Lens
           </span>
+          <div className="w-px h-5 bg-white/10 mx-0.5 shrink-0"></div>
           {lenses.map((lens) => (
             <button
               key={lens.id}
@@ -539,50 +725,66 @@ export default function EcosystemMapView({
           />
         )}
 
-        {/* 6. Optional bottom summary strip mimicking the mockup layout */}
+        {/* 6. Bottom summary strip — live derived intelligence */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          
-          <div className="bg-[#15151c] p-3 rounded-lg border border-white/5 flex items-center space-x-2.5">
-            <div className="p-2 rounded bg-blue-500/10 text-[#3b82f6] shrink-0">
+
+          {/* Top Cluster */}
+          <div className="group relative overflow-hidden bg-gradient-to-b from-[#16161e] to-[#101015] p-3.5 rounded-xl border border-white/[0.07] flex items-center gap-3 transition-all duration-200 hover:border-[#3b82f6]/30 hover:shadow-[0_8px_28px_-12px_rgba(59,130,246,0.45)]">
+            <span className="absolute left-0 top-0 h-full w-[3px] bg-[#3b82f6]/70"></span>
+            <div className="p-2.5 rounded-lg bg-[#3b82f6]/10 text-[#3b82f6] ring-1 ring-inset ring-[#3b82f6]/20 shrink-0 transition-transform duration-200 group-hover:scale-105">
               <Droplet className="w-4 h-4" />
             </div>
-            <div>
-              <span className="text-[8px] font-mono text-white/40 uppercase tracking-wider block">Top Cluster</span>
-              <span className="text-xs font-bold text-white block">Water Innovation</span>
-              <span className="text-[10px] text-emerald-400 font-mono">28 entities active</span>
+            <div className="min-w-0">
+              <span className="text-[8px] font-mono text-white/40 uppercase tracking-[0.14em] block">Top Cluster</span>
+              <span className="text-sm font-bold text-white block truncate leading-tight">{bottomSummary.topClusterLabel}</span>
+              <span className="text-[10px] text-[#3b82f6] font-mono font-semibold flex items-center gap-1">
+                <span className="tabular-nums">{bottomSummary.topClusterCount}</span> entities active
+              </span>
             </div>
           </div>
 
-          <div className="bg-[#15151c] p-3 rounded-lg border border-white/5 flex items-center space-x-2.5">
-            <div className="p-2 rounded bg-amber-500/10 text-[#c5a059] shrink-0">
+          {/* Active Region */}
+          <div className="group relative overflow-hidden bg-gradient-to-b from-[#16161e] to-[#101015] p-3.5 rounded-xl border border-white/[0.07] flex items-center gap-3 transition-all duration-200 hover:border-[#c5a059]/30 hover:shadow-[0_8px_28px_-12px_rgba(197,160,89,0.45)]">
+            <span className="absolute left-0 top-0 h-full w-[3px] bg-[#c5a059]/70"></span>
+            <div className="p-2.5 rounded-lg bg-[#c5a059]/10 text-[#c5a059] ring-1 ring-inset ring-[#c5a059]/20 shrink-0 transition-transform duration-200 group-hover:scale-105">
               <Compass className="w-4 h-4" />
             </div>
-            <div>
-              <span className="text-[8px] font-mono text-white/40 uppercase tracking-wider block">Active Region</span>
-              <span className="text-xs font-bold text-white block">Ontario Corridor</span>
-              <span className="text-[10px] text-emerald-400 font-mono">41 entities synchronized</span>
+            <div className="min-w-0">
+              <span className="text-[8px] font-mono text-white/40 uppercase tracking-[0.14em] block">Most Active Region</span>
+              <span className="text-sm font-bold text-white block truncate leading-tight">{bottomSummary.topProvince}</span>
+              <span className="text-[10px] text-[#c5a059] font-mono font-semibold">
+                <span className="tabular-nums">{bottomSummary.topProvinceCount}</span> entities synchronized
+              </span>
             </div>
           </div>
 
-          <div className="bg-[#15151c] p-3 rounded-lg border border-white/5 flex items-center space-x-2.5">
-            <div className="p-2 rounded bg-red-500/10 text-red-400 shrink-0">
+          {/* Critical Action */}
+          <div className="group relative overflow-hidden bg-gradient-to-b from-[#1a1316] to-[#101015] p-3.5 rounded-xl border border-red-500/15 flex items-center gap-3 transition-all duration-200 hover:border-red-500/40 hover:shadow-[0_8px_28px_-12px_rgba(239,68,68,0.5)]">
+            <span className="absolute left-0 top-0 h-full w-[3px] bg-red-500/80 animate-pulse"></span>
+            <div className="p-2.5 rounded-lg bg-red-500/10 text-red-400 ring-1 ring-inset ring-red-500/25 shrink-0 transition-transform duration-200 group-hover:scale-105">
               <Flame className="w-4 h-4" />
             </div>
-            <div>
-              <span className="text-[8px] font-mono text-white/40 uppercase tracking-wider block">Action priority</span>
-              <span className="text-xs font-bold text-red-400 block uppercase">Critical Action</span>
-              <span className="text-[10px] text-red-400 font-mono">17 require response</span>
+            <div className="min-w-0">
+              <span className="text-[8px] font-mono text-white/40 uppercase tracking-[0.14em] block">Action Priority</span>
+              <span className="text-sm font-bold text-red-400 block uppercase leading-tight">Critical Action</span>
+              <span className="text-[10px] text-red-400 font-mono font-semibold">
+                <span className="tabular-nums">{bottomSummary.criticalActions}</span> require response
+              </span>
             </div>
           </div>
 
-          <div className="bg-[#15151c] p-3 rounded-lg border border-white/5 flex items-center space-x-2.5">
-            <div className="p-2 rounded bg-purple-500/10 text-purple-400 shrink-0">
+          {/* Prize Readiness */}
+          <div className="group relative overflow-hidden bg-gradient-to-b from-[#16161e] to-[#101015] p-3.5 rounded-xl border border-white/[0.07] flex items-center gap-3 transition-all duration-200 hover:border-emerald-500/30 hover:shadow-[0_8px_28px_-12px_rgba(16,185,129,0.45)]">
+            <span className="absolute left-0 top-0 h-full w-[3px] bg-emerald-500/70"></span>
+            <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400 ring-1 ring-inset ring-emerald-500/20 shrink-0 transition-transform duration-200 group-hover:scale-105">
               <Award className="w-4 h-4" />
             </div>
-            <div>
-              <span className="text-[8px] font-mono text-white/40 uppercase tracking-wider block">Validation Stage</span>
-              <span className="text-xs font-bold text-white block">Prize readiness</span>
-              <span className="text-[10px] text-emerald-400 font-mono">3 upcoming audits</span>
+            <div className="min-w-0">
+              <span className="text-[8px] font-mono text-white/40 uppercase tracking-[0.14em] block">Validation Stage</span>
+              <span className="text-sm font-bold text-white block leading-tight">Prize Readiness</span>
+              <span className="text-[10px] text-emerald-400 font-mono font-semibold">
+                <span className="tabular-nums">{bottomSummary.prizeReady}</span> high-readiness teams
+              </span>
             </div>
           </div>
 
@@ -591,22 +793,30 @@ export default function EcosystemMapView({
       </div>
 
       {/* 5. Right Metrics and selected-entity insight panel */}
-      <div className="w-full xl:w-[380px] shrink-0 bg-[#0e0e12] border-l border-white/10 p-4 overflow-y-auto space-y-4">
-        
+      <div className="w-full xl:w-[380px] shrink-0 bg-gradient-to-b from-[#0e0e12] to-[#0a0a0c] border-l border-white/10 p-4 overflow-y-auto space-y-4">
+
+        {/* Panel heading */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#c5a059] shadow-[0_0_8px_rgba(197,160,89,0.6)] animate-pulse"></span>
+            <h2 className="text-[11px] font-bold font-mono tracking-[0.18em] text-white uppercase">Intelligence</h2>
+          </div>
+          <span className="text-[9px] font-mono text-white/35 uppercase tracking-wider">Live</span>
+        </div>
+
         {/* Metric tabs */}
-        <div className="flex border-b border-white/10 select-none font-mono text-[10px] font-bold tracking-wider uppercase">
+        <div className="flex bg-[#0a0a0c] border border-white/[0.07] rounded-lg p-1 select-none font-mono text-[10px] font-bold tracking-wider uppercase">
           {(["metrics", "ranking", "insights", "entities"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setRightPanelTab(tab)}
-              className={`flex-grow text-center pb-2.5 transition-colors cursor-pointer relative ${
-                rightPanelTab === tab ? "text-[#c5a059]" : "text-white/40 hover:text-white/70"
+              className={`flex-grow text-center py-1.5 rounded-md transition-all cursor-pointer ${
+                rightPanelTab === tab
+                  ? "bg-[#c5a059]/15 text-[#c5a059] shadow-[inset_0_0_0_1px_rgba(197,160,89,0.3)]"
+                  : "text-white/40 hover:text-white/75 hover:bg-white/[0.03]"
               }`}
             >
-              <span>{tab}</span>
-              {rightPanelTab === tab && (
-                <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-[#c5a059] shadow-[0_0_8px_rgba(197,160,89,0.5)]"></div>
-              )}
+              {tab}
             </button>
           ))}
         </div>
@@ -651,29 +861,33 @@ export default function EcosystemMapView({
             {/* Metric cards grid */}
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-3 select-none">
-                
-                <div className="metric-snapshot-card bg-[#0a0a0c] border border-white/5 p-3 rounded-lg text-xs space-y-1" id="side-metric-followups">
+
+                <div className="metric-snapshot-card group relative overflow-hidden bg-[#0a0a0c] border border-white/[0.07] p-3 rounded-lg text-xs space-y-1 transition-colors hover:border-red-500/30" id="side-metric-followups">
+                  <span className="absolute right-2 top-2 w-1.5 h-1.5 rounded-full bg-red-500/70"></span>
                   <span className="text-[9px] text-white/40 font-mono uppercase tracking-wider block">Follow-ups Due</span>
-                  <span className="text-xl font-bold font-mono text-white block">{stats.followUps}</span>
-                  <span className="text-[8px] text-red-400 font-mono block">Action overdue</span>
+                  <span className="text-2xl font-bold font-mono text-white block tabular-nums leading-none">{stats.followUps}</span>
+                  <span className="text-[8px] text-red-400 font-mono block uppercase tracking-wide">Action overdue</span>
                 </div>
 
-                <div className="metric-snapshot-card bg-[#0a0a0c] border border-white/5 p-3 rounded-lg text-xs space-y-1" id="side-metric-readiness">
+                <div className="metric-snapshot-card group relative overflow-hidden bg-[#0a0a0c] border border-white/[0.07] p-3 rounded-lg text-xs space-y-1 transition-colors hover:border-emerald-500/30" id="side-metric-readiness">
+                  <span className="absolute right-2 top-2 w-1.5 h-1.5 rounded-full bg-emerald-500/70"></span>
                   <span className="text-[9px] text-white/40 font-mono uppercase tracking-wider block">High Readiness</span>
-                  <span className="text-xl font-bold font-mono text-white block">{stats.highReady}</span>
-                  <span className="text-[8px] text-emerald-400 font-mono block">Prize candidate</span>
+                  <span className="text-2xl font-bold font-mono text-white block tabular-nums leading-none">{stats.highReady}</span>
+                  <span className="text-[8px] text-emerald-400 font-mono block uppercase tracking-wide">Prize candidate</span>
                 </div>
 
-                <div className="metric-snapshot-card bg-[#0a0a0c] border border-white/5 p-3 rounded-lg text-xs space-y-1" id="side-metric-evidence">
+                <div className="metric-snapshot-card group relative overflow-hidden bg-[#0a0a0c] border border-white/[0.07] p-3 rounded-lg text-xs space-y-1 transition-colors hover:border-[#3b82f6]/30" id="side-metric-evidence">
+                  <span className="absolute right-2 top-2 w-1.5 h-1.5 rounded-full bg-[#3b82f6]/70"></span>
                   <span className="text-[9px] text-white/40 font-mono uppercase tracking-wider block">Evidence Badge</span>
-                  <span className="text-xl font-bold font-mono text-white block">{stats.reportReady}</span>
-                  <span className="text-[8px] text-[#3b82f6] font-mono block">Report-ready</span>
+                  <span className="text-2xl font-bold font-mono text-white block tabular-nums leading-none">{stats.reportReady}</span>
+                  <span className="text-[8px] text-[#3b82f6] font-mono block uppercase tracking-wide">Report-ready</span>
                 </div>
 
-                <div className="metric-snapshot-card bg-[#0a0a0c] border border-white/5 p-3 rounded-lg text-xs space-y-1" id="side-metric-partners">
+                <div className="metric-snapshot-card group relative overflow-hidden bg-[#0a0a0c] border border-white/[0.07] p-3 rounded-lg text-xs space-y-1 transition-colors hover:border-purple-500/30" id="side-metric-partners">
+                  <span className="absolute right-2 top-2 w-1.5 h-1.5 rounded-full bg-purple-500/70"></span>
                   <span className="text-[9px] text-white/40 font-mono uppercase tracking-wider block">Partners Synced</span>
-                  <span className="text-xl font-bold font-mono text-white block">{stats.partnerCount}</span>
-                  <span className="text-[8px] text-purple-400 font-mono block">Syncing network</span>
+                  <span className="text-2xl font-bold font-mono text-white block tabular-nums leading-none">{stats.partnerCount}</span>
+                  <span className="text-[8px] text-purple-400 font-mono block uppercase tracking-wide">Syncing network</span>
                 </div>
 
               </div>
@@ -774,56 +988,117 @@ export default function EcosystemMapView({
         {/* RANKING Tab Content */}
         {rightPanelTab === "ranking" && (
           <div className="space-y-3">
-            <h4 className="text-[10px] font-mono uppercase text-white/45 font-bold border-b border-white/10 pb-1.5">National Strategic Priority Leaders</h4>
-            <div className="space-y-2">
-              {entities.slice(0, 7).sort((a,b) => b.priorityScore - a.priorityScore).map((e, idx) => (
-                <div 
-                  key={e.id}
-                  onClick={() => onSelectEntity(e)}
-                  className="bg-[#0a0a0c] border border-white/5 p-2.5 rounded-lg flex items-center justify-between hover:border-[#c5a059]/30 cursor-pointer text-xs"
-                >
-                  <div className="flex items-center space-x-2">
-                    <span className="font-mono text-[10px] font-bold text-[#c5a059]">0{idx+1}</span>
-                    <div>
-                      <span className="font-bold text-white block">{e.name}</span>
-                      <span className="text-[9px] text-white/40 uppercase font-mono">{e.city}, {e.province}</span>
-                    </div>
-                  </div>
-                  <span className="font-mono text-xs font-bold text-[#c5a059] bg-[#c5a059]/15 px-1.5 py-0.5 rounded border border-[#c5a059]/20">
-                    {e.priorityScore}
-                  </span>
-                </div>
-              ))}
+            <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
+              <h4 className="text-[10px] font-mono uppercase text-white/45 font-bold">National Strategic Priority Leaders</h4>
+              <span className="text-[9px] font-mono text-white/35 uppercase">Top {rankedLeaders.length} of {stats.totalCount}</span>
             </div>
+            {rankedLeaders.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center py-14 space-y-2">
+                <Star className="w-7 h-7 text-white/15" />
+                <span className="text-xs text-white/55 max-w-[220px]">No entities match the current filters. Adjust the lens or clear filters to rank leaders.</span>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {rankedLeaders.map((e, idx) => {
+                  const isComparingThis = compareEntityIds.includes(e.id);
+                  const isSelected = selectedEntity?.id === e.id;
+                  const rankColor = idx === 0 ? "text-amber-300" : idx === 1 ? "text-zinc-300" : idx === 2 ? "text-amber-600" : "text-white/35";
+                  return (
+                    <div
+                      key={e.id}
+                      onClick={() => onSelectEntity(e)}
+                      className={`group bg-[#0a0a0c] border p-2.5 rounded-lg flex items-center gap-2.5 cursor-pointer text-xs transition-all ${
+                        isSelected ? "border-[#c5a059]/60 bg-[#15151c]" : "border-white/5 hover:border-[#c5a059]/30"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isComparingThis}
+                        onChange={(ev) => { ev.stopPropagation(); handleToggleCompare(e.id); }}
+                        onClick={(ev) => ev.stopPropagation()}
+                        className="w-3.5 h-3.5 rounded border-white/20 bg-zinc-900 text-[#c5a059] focus:ring-0 checked:bg-[#c5a059] checked:border-[#c5a059] cursor-pointer shrink-0"
+                        title="Add to comparison matrix"
+                      />
+                      <span className={`font-mono text-sm font-extrabold tabular-nums w-6 text-center shrink-0 ${rankColor}`}>
+                        {idx + 1 < 10 ? `0${idx + 1}` : idx + 1}
+                      </span>
+                      <div className="min-w-0 flex-grow">
+                        <span className="font-bold text-white block truncate">{e.name}</span>
+                        <span className="text-[9px] text-white/40 uppercase font-mono">{e.city}, {e.province}</span>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span className="font-mono text-xs font-bold text-[#c5a059] bg-[#c5a059]/15 px-1.5 py-0.5 rounded border border-[#c5a059]/20 tabular-nums">
+                          {e.priorityScore}
+                        </span>
+                        <div className="w-14 h-1 bg-white/5 rounded-full overflow-hidden">
+                          <div className="h-full bg-[#c5a059] rounded-full" style={{ width: `${e.priorityScore}%` }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
-        {/* INSIGHTS Tab Content */}
+        {/* INSIGHTS Tab Content — live, data-driven, and actionable */}
         {rightPanelTab === "insights" && (
           <div className="space-y-3">
-            <h4 className="text-[10px] font-mono uppercase text-white/45 font-bold border-b border-white/10 pb-1.5">Regional Strategic Intelligence</h4>
-            <div className="space-y-3 text-xs text-white/75">
-              <div className="p-3 bg-[#15151c] rounded-lg border-l-2 border-[#c5a059]">
-                <h5 className="font-bold text-[#c5a059] font-mono text-[10px] uppercase">Calgary Corridor Capacity</h5>
-                <p className="mt-1 leading-relaxed text-[11px] text-white/70">
-                  High concentration of Water systems and rapid wildfire models nearby Calgary Hub Anchor. Perfect baseline for secondary pilot integration decks.
-                </p>
-              </div>
-
-              <div className="p-3 bg-[#15151c] rounded-lg border-l-2 border-[#3b82f6]">
-                <h5 className="font-bold text-[#3b82f6] font-mono text-[10px] uppercase">Waterloo Quantum Density</h5>
-                <p className="mt-1 leading-relaxed text-[11px] text-white/70">
-                  Exceptional priority weightings observed in Waterloo optics cores. Candidate platforms suggest post-quantum defense breakthrough potential.
-                </p>
-              </div>
-
-              <div className="p-3 bg-[#15151c] rounded-lg border-l-2 border-purple-500">
-                <h5 className="font-bold text-purple-400 font-mono text-[10px] uppercase">Sub-Arctic Adaptation</h5>
-                <p className="mt-1 leading-relaxed text-[11px] text-white/70">
-                  Adapting standard desalination cells for deep permafrost freeze. Gaps remain in validation files, requiring direct, localized research follow-ups.
-                </p>
-              </div>
+            <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
+              <h4 className="text-[10px] font-mono uppercase text-white/45 font-bold flex items-center gap-1.5">
+                <Lightbulb className="w-3.5 h-3.5 text-[#c5a059]" />
+                Strategic Intelligence
+              </h4>
+              <span className="text-[9px] font-mono text-white/35 uppercase">{insights.length} signals</span>
             </div>
+
+            {insights.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center py-14 space-y-2">
+                <Lightbulb className="w-7 h-7 text-white/15" />
+                <span className="text-xs text-white/55 max-w-[220px]">No signals to surface yet. Insights appear as ecosystem data accumulates.</span>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {insights.map(insight => {
+                  const tone = insight.severity === "critical"
+                    ? { border: "border-red-500/70", text: "text-red-400", bg: "bg-red-500/10", ring: "ring-red-500/20" }
+                    : insight.severity === "opportunity"
+                    ? { border: "border-[#c5a059]/70", text: "text-[#c5a059]", bg: "bg-[#c5a059]/10", ring: "ring-[#c5a059]/20" }
+                    : { border: "border-[#3b82f6]/70", text: "text-[#3b82f6]", bg: "bg-[#3b82f6]/10", ring: "ring-[#3b82f6]/20" };
+                  const Icon = insight.Icon;
+                  return (
+                    <div
+                      key={insight.id}
+                      className={`group bg-[#15151c] rounded-lg border-l-2 ${tone.border} border-y border-r border-white/5 p-3 space-y-2 transition-colors hover:bg-[#191921]`}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <div className={`p-1.5 rounded-md ${tone.bg} ${tone.text} ring-1 ring-inset ${tone.ring} shrink-0`}>
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="min-w-0 flex-grow">
+                          <div className="flex items-center justify-between gap-2">
+                            <h5 className={`font-bold font-mono text-[10px] uppercase tracking-wide ${tone.text}`}>{insight.title}</h5>
+                            {insight.metric && (
+                              <span className={`font-mono text-sm font-extrabold tabular-nums leading-none ${tone.text}`}>{insight.metric}</span>
+                            )}
+                          </div>
+                          <p className="mt-1 leading-relaxed text-[11px] text-white/70">{insight.detail}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={insight.onAction}
+                        className={`w-full flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer ${tone.bg} ${tone.text} hover:brightness-125`}
+                      >
+                        <span>{insight.actionLabel}</span>
+                        <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
