@@ -183,6 +183,42 @@ export default function EcosystemMapView({
     };
   }, [filteredEntities]);
 
+  // Derived, real values for the bottom summary strip (no hardcoded counts)
+  const bottomSummary = useMemo(() => {
+    const trackLabels: Record<string, string> = {
+      Wildfire: "Wildfire Response",
+      Water: "Water Innovation",
+      Carbon: "Carbon Removal",
+      Health: "Healthspan",
+      Quantum: "Quantum Apps",
+      DeepTech: "AI + Deep Tech"
+    };
+    const topTrack = Object.entries(stats.tracksCounts).reduce(
+      (best, [key, count]) => (count > best.count ? { key, count } : best),
+      { key: "Water", count: -1 }
+    );
+
+    // Most active province across the filtered set
+    const provinceCounts: Record<string, number> = {};
+    filteredEntities.forEach(e => {
+      if (e.province) provinceCounts[e.province] = (provinceCounts[e.province] || 0) + 1;
+    });
+    const topProvince = Object.entries(provinceCounts).reduce(
+      (best, [name, count]) => (count > best.count ? { name, count } : best),
+      { name: "—", count: 0 }
+    );
+
+    return {
+      topClusterLabel: trackLabels[topTrack.key] || "Water Innovation",
+      topClusterCount: Math.max(topTrack.count, 0),
+      topProvince: topProvince.name,
+      topProvinceCount: topProvince.count,
+      criticalActions: stats.followUps,
+      prizeReady: stats.highReady,
+      reportReady: stats.reportReady
+    };
+  }, [stats, filteredEntities]);
+
   // Filter entities according to search within the tab
   const searchedEntitiesTab = useMemo(() => {
     if (!searchQuery) return entities;
@@ -216,10 +252,12 @@ export default function EcosystemMapView({
       <div className="flex-grow flex flex-col p-4 space-y-4 overflow-y-auto">
         
         {/* Horizontal Opportunity Lens bar near map Controls */}
-        <div className="map-controls-panel bg-[#15151c]/60 border border-white/10 p-1.5 rounded-lg flex flex-wrap items-center gap-1">
-          <span className="text-[9px] font-mono uppercase tracking-wider text-white/40 font-bold px-2 py-1 shrink-0">
-            Ecosystem Lens:
+        <div className="map-controls-panel bg-gradient-to-b from-[#16161e] to-[#101015] border border-white/[0.08] p-2 rounded-xl flex flex-wrap items-center gap-1 shadow-[0_4px_24px_-12px_rgba(0,0,0,0.8)]">
+          <span className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-[0.16em] text-white/45 font-bold px-2 py-1 shrink-0">
+            <Compass className="w-3.5 h-3.5 text-[#c5a059]" />
+            Ecosystem Lens
           </span>
+          <div className="w-px h-5 bg-white/10 mx-0.5 shrink-0"></div>
           {lenses.map((lens) => (
             <button
               key={lens.id}
@@ -539,50 +577,66 @@ export default function EcosystemMapView({
           />
         )}
 
-        {/* 6. Optional bottom summary strip mimicking the mockup layout */}
+        {/* 6. Bottom summary strip — live derived intelligence */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          
-          <div className="bg-[#15151c] p-3 rounded-lg border border-white/5 flex items-center space-x-2.5">
-            <div className="p-2 rounded bg-blue-500/10 text-[#3b82f6] shrink-0">
+
+          {/* Top Cluster */}
+          <div className="group relative overflow-hidden bg-gradient-to-b from-[#16161e] to-[#101015] p-3.5 rounded-xl border border-white/[0.07] flex items-center gap-3 transition-all duration-200 hover:border-[#3b82f6]/30 hover:shadow-[0_8px_28px_-12px_rgba(59,130,246,0.45)]">
+            <span className="absolute left-0 top-0 h-full w-[3px] bg-[#3b82f6]/70"></span>
+            <div className="p-2.5 rounded-lg bg-[#3b82f6]/10 text-[#3b82f6] ring-1 ring-inset ring-[#3b82f6]/20 shrink-0 transition-transform duration-200 group-hover:scale-105">
               <Droplet className="w-4 h-4" />
             </div>
-            <div>
-              <span className="text-[8px] font-mono text-white/40 uppercase tracking-wider block">Top Cluster</span>
-              <span className="text-xs font-bold text-white block">Water Innovation</span>
-              <span className="text-[10px] text-emerald-400 font-mono">28 entities active</span>
+            <div className="min-w-0">
+              <span className="text-[8px] font-mono text-white/40 uppercase tracking-[0.14em] block">Top Cluster</span>
+              <span className="text-sm font-bold text-white block truncate leading-tight">{bottomSummary.topClusterLabel}</span>
+              <span className="text-[10px] text-[#3b82f6] font-mono font-semibold flex items-center gap-1">
+                <span className="tabular-nums">{bottomSummary.topClusterCount}</span> entities active
+              </span>
             </div>
           </div>
 
-          <div className="bg-[#15151c] p-3 rounded-lg border border-white/5 flex items-center space-x-2.5">
-            <div className="p-2 rounded bg-amber-500/10 text-[#c5a059] shrink-0">
+          {/* Active Region */}
+          <div className="group relative overflow-hidden bg-gradient-to-b from-[#16161e] to-[#101015] p-3.5 rounded-xl border border-white/[0.07] flex items-center gap-3 transition-all duration-200 hover:border-[#c5a059]/30 hover:shadow-[0_8px_28px_-12px_rgba(197,160,89,0.45)]">
+            <span className="absolute left-0 top-0 h-full w-[3px] bg-[#c5a059]/70"></span>
+            <div className="p-2.5 rounded-lg bg-[#c5a059]/10 text-[#c5a059] ring-1 ring-inset ring-[#c5a059]/20 shrink-0 transition-transform duration-200 group-hover:scale-105">
               <Compass className="w-4 h-4" />
             </div>
-            <div>
-              <span className="text-[8px] font-mono text-white/40 uppercase tracking-wider block">Active Region</span>
-              <span className="text-xs font-bold text-white block">Ontario Corridor</span>
-              <span className="text-[10px] text-emerald-400 font-mono">41 entities synchronized</span>
+            <div className="min-w-0">
+              <span className="text-[8px] font-mono text-white/40 uppercase tracking-[0.14em] block">Most Active Region</span>
+              <span className="text-sm font-bold text-white block truncate leading-tight">{bottomSummary.topProvince}</span>
+              <span className="text-[10px] text-[#c5a059] font-mono font-semibold">
+                <span className="tabular-nums">{bottomSummary.topProvinceCount}</span> entities synchronized
+              </span>
             </div>
           </div>
 
-          <div className="bg-[#15151c] p-3 rounded-lg border border-white/5 flex items-center space-x-2.5">
-            <div className="p-2 rounded bg-red-500/10 text-red-400 shrink-0">
+          {/* Critical Action */}
+          <div className="group relative overflow-hidden bg-gradient-to-b from-[#1a1316] to-[#101015] p-3.5 rounded-xl border border-red-500/15 flex items-center gap-3 transition-all duration-200 hover:border-red-500/40 hover:shadow-[0_8px_28px_-12px_rgba(239,68,68,0.5)]">
+            <span className="absolute left-0 top-0 h-full w-[3px] bg-red-500/80 animate-pulse"></span>
+            <div className="p-2.5 rounded-lg bg-red-500/10 text-red-400 ring-1 ring-inset ring-red-500/25 shrink-0 transition-transform duration-200 group-hover:scale-105">
               <Flame className="w-4 h-4" />
             </div>
-            <div>
-              <span className="text-[8px] font-mono text-white/40 uppercase tracking-wider block">Action priority</span>
-              <span className="text-xs font-bold text-red-400 block uppercase">Critical Action</span>
-              <span className="text-[10px] text-red-400 font-mono">17 require response</span>
+            <div className="min-w-0">
+              <span className="text-[8px] font-mono text-white/40 uppercase tracking-[0.14em] block">Action Priority</span>
+              <span className="text-sm font-bold text-red-400 block uppercase leading-tight">Critical Action</span>
+              <span className="text-[10px] text-red-400 font-mono font-semibold">
+                <span className="tabular-nums">{bottomSummary.criticalActions}</span> require response
+              </span>
             </div>
           </div>
 
-          <div className="bg-[#15151c] p-3 rounded-lg border border-white/5 flex items-center space-x-2.5">
-            <div className="p-2 rounded bg-purple-500/10 text-purple-400 shrink-0">
+          {/* Prize Readiness */}
+          <div className="group relative overflow-hidden bg-gradient-to-b from-[#16161e] to-[#101015] p-3.5 rounded-xl border border-white/[0.07] flex items-center gap-3 transition-all duration-200 hover:border-emerald-500/30 hover:shadow-[0_8px_28px_-12px_rgba(16,185,129,0.45)]">
+            <span className="absolute left-0 top-0 h-full w-[3px] bg-emerald-500/70"></span>
+            <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400 ring-1 ring-inset ring-emerald-500/20 shrink-0 transition-transform duration-200 group-hover:scale-105">
               <Award className="w-4 h-4" />
             </div>
-            <div>
-              <span className="text-[8px] font-mono text-white/40 uppercase tracking-wider block">Validation Stage</span>
-              <span className="text-xs font-bold text-white block">Prize readiness</span>
-              <span className="text-[10px] text-emerald-400 font-mono">3 upcoming audits</span>
+            <div className="min-w-0">
+              <span className="text-[8px] font-mono text-white/40 uppercase tracking-[0.14em] block">Validation Stage</span>
+              <span className="text-sm font-bold text-white block leading-tight">Prize Readiness</span>
+              <span className="text-[10px] text-emerald-400 font-mono font-semibold">
+                <span className="tabular-nums">{bottomSummary.prizeReady}</span> high-readiness teams
+              </span>
             </div>
           </div>
 
@@ -591,22 +645,30 @@ export default function EcosystemMapView({
       </div>
 
       {/* 5. Right Metrics and selected-entity insight panel */}
-      <div className="w-full xl:w-[380px] shrink-0 bg-[#0e0e12] border-l border-white/10 p-4 overflow-y-auto space-y-4">
-        
+      <div className="w-full xl:w-[380px] shrink-0 bg-gradient-to-b from-[#0e0e12] to-[#0a0a0c] border-l border-white/10 p-4 overflow-y-auto space-y-4">
+
+        {/* Panel heading */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#c5a059] shadow-[0_0_8px_rgba(197,160,89,0.6)] animate-pulse"></span>
+            <h2 className="text-[11px] font-bold font-mono tracking-[0.18em] text-white uppercase">Intelligence</h2>
+          </div>
+          <span className="text-[9px] font-mono text-white/35 uppercase tracking-wider">Live</span>
+        </div>
+
         {/* Metric tabs */}
-        <div className="flex border-b border-white/10 select-none font-mono text-[10px] font-bold tracking-wider uppercase">
+        <div className="flex bg-[#0a0a0c] border border-white/[0.07] rounded-lg p-1 select-none font-mono text-[10px] font-bold tracking-wider uppercase">
           {(["metrics", "ranking", "insights", "entities"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setRightPanelTab(tab)}
-              className={`flex-grow text-center pb-2.5 transition-colors cursor-pointer relative ${
-                rightPanelTab === tab ? "text-[#c5a059]" : "text-white/40 hover:text-white/70"
+              className={`flex-grow text-center py-1.5 rounded-md transition-all cursor-pointer ${
+                rightPanelTab === tab
+                  ? "bg-[#c5a059]/15 text-[#c5a059] shadow-[inset_0_0_0_1px_rgba(197,160,89,0.3)]"
+                  : "text-white/40 hover:text-white/75 hover:bg-white/[0.03]"
               }`}
             >
-              <span>{tab}</span>
-              {rightPanelTab === tab && (
-                <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-[#c5a059] shadow-[0_0_8px_rgba(197,160,89,0.5)]"></div>
-              )}
+              {tab}
             </button>
           ))}
         </div>
@@ -651,29 +713,33 @@ export default function EcosystemMapView({
             {/* Metric cards grid */}
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-3 select-none">
-                
-                <div className="metric-snapshot-card bg-[#0a0a0c] border border-white/5 p-3 rounded-lg text-xs space-y-1" id="side-metric-followups">
+
+                <div className="metric-snapshot-card group relative overflow-hidden bg-[#0a0a0c] border border-white/[0.07] p-3 rounded-lg text-xs space-y-1 transition-colors hover:border-red-500/30" id="side-metric-followups">
+                  <span className="absolute right-2 top-2 w-1.5 h-1.5 rounded-full bg-red-500/70"></span>
                   <span className="text-[9px] text-white/40 font-mono uppercase tracking-wider block">Follow-ups Due</span>
-                  <span className="text-xl font-bold font-mono text-white block">{stats.followUps}</span>
-                  <span className="text-[8px] text-red-400 font-mono block">Action overdue</span>
+                  <span className="text-2xl font-bold font-mono text-white block tabular-nums leading-none">{stats.followUps}</span>
+                  <span className="text-[8px] text-red-400 font-mono block uppercase tracking-wide">Action overdue</span>
                 </div>
 
-                <div className="metric-snapshot-card bg-[#0a0a0c] border border-white/5 p-3 rounded-lg text-xs space-y-1" id="side-metric-readiness">
+                <div className="metric-snapshot-card group relative overflow-hidden bg-[#0a0a0c] border border-white/[0.07] p-3 rounded-lg text-xs space-y-1 transition-colors hover:border-emerald-500/30" id="side-metric-readiness">
+                  <span className="absolute right-2 top-2 w-1.5 h-1.5 rounded-full bg-emerald-500/70"></span>
                   <span className="text-[9px] text-white/40 font-mono uppercase tracking-wider block">High Readiness</span>
-                  <span className="text-xl font-bold font-mono text-white block">{stats.highReady}</span>
-                  <span className="text-[8px] text-emerald-400 font-mono block">Prize candidate</span>
+                  <span className="text-2xl font-bold font-mono text-white block tabular-nums leading-none">{stats.highReady}</span>
+                  <span className="text-[8px] text-emerald-400 font-mono block uppercase tracking-wide">Prize candidate</span>
                 </div>
 
-                <div className="metric-snapshot-card bg-[#0a0a0c] border border-white/5 p-3 rounded-lg text-xs space-y-1" id="side-metric-evidence">
+                <div className="metric-snapshot-card group relative overflow-hidden bg-[#0a0a0c] border border-white/[0.07] p-3 rounded-lg text-xs space-y-1 transition-colors hover:border-[#3b82f6]/30" id="side-metric-evidence">
+                  <span className="absolute right-2 top-2 w-1.5 h-1.5 rounded-full bg-[#3b82f6]/70"></span>
                   <span className="text-[9px] text-white/40 font-mono uppercase tracking-wider block">Evidence Badge</span>
-                  <span className="text-xl font-bold font-mono text-white block">{stats.reportReady}</span>
-                  <span className="text-[8px] text-[#3b82f6] font-mono block">Report-ready</span>
+                  <span className="text-2xl font-bold font-mono text-white block tabular-nums leading-none">{stats.reportReady}</span>
+                  <span className="text-[8px] text-[#3b82f6] font-mono block uppercase tracking-wide">Report-ready</span>
                 </div>
 
-                <div className="metric-snapshot-card bg-[#0a0a0c] border border-white/5 p-3 rounded-lg text-xs space-y-1" id="side-metric-partners">
+                <div className="metric-snapshot-card group relative overflow-hidden bg-[#0a0a0c] border border-white/[0.07] p-3 rounded-lg text-xs space-y-1 transition-colors hover:border-purple-500/30" id="side-metric-partners">
+                  <span className="absolute right-2 top-2 w-1.5 h-1.5 rounded-full bg-purple-500/70"></span>
                   <span className="text-[9px] text-white/40 font-mono uppercase tracking-wider block">Partners Synced</span>
-                  <span className="text-xl font-bold font-mono text-white block">{stats.partnerCount}</span>
-                  <span className="text-[8px] text-purple-400 font-mono block">Syncing network</span>
+                  <span className="text-2xl font-bold font-mono text-white block tabular-nums leading-none">{stats.partnerCount}</span>
+                  <span className="text-[8px] text-purple-400 font-mono block uppercase tracking-wide">Syncing network</span>
                 </div>
 
               </div>
