@@ -1,0 +1,6 @@
+{
+  "name": "XPRIZE Canada Hub - Engagement Intelligence",
+  "description": "High-fidelity strategic intelligence application and interactive ecosystem map for tracking Canadian innovators, partners, of technology validation pipelines.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

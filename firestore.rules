@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidBriefing(data) {
+      return data.keys().hasAll(['entityId', 'entityName', 'challengeArea', 'ownerUserId', 'status'])
+        && data.entityId is string && data.entityId.size() <= 128
+        && data.entityName is string && data.entityName.size() <= 200
+        && data.challengeArea is string && data.challengeArea.size() <= 100
+        && data.ownerUserId is string && data.ownerUserId == request.auth.uid
+        && data.status is string && data.status.size() <= 50;
+    }
+
+    match /briefings/{briefingId} {
+      allow read: if isSignedIn() && existing().ownerUserId == request.auth.uid;
+      
+      allow create: if isSignedIn() 
+        && isValidId(briefingId) 
+        && isValidBriefing(incoming());
+
+      allow update: if isSignedIn()
+        && existing().ownerUserId == request.auth.uid
+        && isValidBriefing(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'notes', 'entityName', 'challengeArea', 'owner'])
+        && incoming().ownerUserId == existing().ownerUserId;
+
+      allow delete: if isSignedIn() && existing().ownerUserId == request.auth.uid;
+      
+      allow list: if isSignedIn() && resource.data.ownerUserId == request.auth.uid;
+    }
+  }
+}
